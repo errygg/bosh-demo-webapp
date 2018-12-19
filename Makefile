@@ -6,4 +6,4 @@ deps:
 
 .PHONY: build
 build: deps
-	go build -o realtime-chat main.go rooms.go template.go
+	go build -o pcf-consul-webapp-demo src/pcf-consul-webapp-demo/main.go src/pcf-consul-webapp-demo/rooms.go src/pcf-consul-webapp-demo/template.go

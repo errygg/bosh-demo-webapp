@@ -1,0 +1,1 @@
+export GOPACKAGENAME=pcf-consul-webapp-demo

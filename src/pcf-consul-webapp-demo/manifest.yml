@@ -1,0 +1,11 @@
+---
+applications:
+- name: pcf-consul-webapp-demo
+  disk: 256M
+  memory: 128M
+  random-route: true
+  buildpacks:
+    - go_buildpack
+    - consul
+  env:
+    GOPACKAGENAME: pcf-consul-webapp-demo
