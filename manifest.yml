@@ -1,7 +1,7 @@
 ---
 applications:
 - name: pcf-consul-webapp-demo
-  instances: 1
+  instances: 5
   disk: 256M
   memory: 128M
   buildpacks:
