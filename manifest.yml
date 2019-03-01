@@ -1,13 +1,11 @@
 ---
 applications:
-- name: pcf-consul-webapp-demo
-  instances: 5
+- name: pcf-consul-webapp-counter
+  instances: 1
   disk: 256M
   memory: 128M
   buildpacks:
     - pcf_consul_buildpack
     - go_buildpack
   env:
-    GOPACKAGENAME: pcf-consul-webapp-demo
-  routes:
-    - route: tcp.pasorobles.cf-app.com:8301
+    GOPACKAGENAME: pcf-consul-webapp-counter
