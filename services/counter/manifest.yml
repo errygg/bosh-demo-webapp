@@ -1,0 +1,11 @@
+---
+applications:
+- name: consul-counter
+  instances: 1
+  disk: 256M
+  memory: 128M
+  buildpacks:
+    - consul_buildpack
+    - go_buildpack
+  env:
+    GOPACKAGENAME: consul-counter

@@ -1,6 +1,0 @@
-{
-  "datacenter": "dc2",
-  "node_name": "dashboard-service",
-  "retry_join": "40.83.208.203",
-
-}

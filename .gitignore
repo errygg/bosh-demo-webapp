@@ -1,0 +1,6 @@
+terraform/.terraform
+terraform/.terraform.tfstate.lock.info
+terraform/terraform-azurerm-consul/terraform.tfstate
+terraform/terraform-azurerm-consul/terraform.tfstate.backup
+**/*.swp
+terraform/terraform-azurerm-consul/terraform.tfvars
