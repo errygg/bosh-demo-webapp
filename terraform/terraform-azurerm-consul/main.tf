@@ -251,28 +251,25 @@ resource "azurerm_virtual_machine" "consul_server" {
   }
 
   provisioner "file" {
-    content     = "${data.template_file.server_config.rendered}"
-    destination = "${var.config_destination_dir}/consul.json"
+    content     = "${data.template_file.init_server.rendered}"
+    destination = "${var.config_destination_dir}/init.sh"
+
     connection {
-      type        = "ssh"
-      user        = "ubuntu"
+      type = "ssh"
+      user = "ubuntu"
     }
   }
 
   provisioner "remote-exec" {
     inline = [
-      "sudo apt-get update",
-      "sudo apt-get install -y unzip",
-      "mkdir -p ${var.data_directory}",
-      "curl ${var.binary_uri}/${var.binary_filename} --output ${var.config_destination_dir}/consul.zip",
-      "unzip ${var.config_destination_dir}/consul.zip -d ${var.config_destination_dir}",
-      "nohup ${var.config_destination_dir}/consul agent -config-file=${var.config_destination_dir}/consul.json > ${var.config_destination_dir}/consul.log 2>&1 &",
+      "chmod 755 ${var.config_destination_dir}/init.sh",
+      "sudo ${var.config_destination_dir}/init.sh",
       "sleep 1"
     ]
-    
+
     connection {
-      type        = "ssh"
-      user        = "ubuntu"
+      type = "ssh"
+      user = "ubuntu"
     }
   }
 }
@@ -316,89 +313,85 @@ resource "azurerm_virtual_machine" "consul_client" {
     }
   }
 
-  provisioner "file" {
-    content     = "${data.template_file.client_config.rendered}"
-    destination = "${var.config_destination_dir}/consul.json"
-    
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-    }
-  }
-
-  # TODO - update go build to include assets using packr2
   provisioner "local-exec" {
     working_dir = "${path.module}/../../services/${var.service_type}"
-    command     = "env GOOS=linux GOARCH=386 go build"
+    command     = "env GOOS=linux GOARCH=386 make build"
   }
 
   provisioner "file" {
-    source      = "${path.module}/../../services/${var.service_type}/assets/"
-    destination = "${var.config_destination_dir}"
-    
-    connection {
-      type = "ssh"
-      user = "ubuntu"
-    }
-  }
-
-  provisioner "file" {
-    source      = "${path.module}/../../services/${var.service_type}/${var.service_type}"
+    source = "${path.module}/../../services/${var.service_type}"
     destination = "${var.config_destination_dir}/${var.service_type}"
-    
+
     connection {
       type = "ssh"
       user = "ubuntu"
     }
   }
 
-  # export COUNTING_SERVICE_URL=`curl -s http://104.42.219.125:8500/v1/catalog/service/consul-counter?dc=dc1 |jq '.[0] | "http://" + .ServiceAddress + ":" + "\(.ServicePort)"'`
+  provisioner "file" {
+    source      = "${path.module}/templates/${var.service_type}.sh.tpl"
+    destination = "${var.config_destination_dir}/${var.service_type}.sh.tpl"
+
+    connection {
+      type = "ssh"
+      user = "ubuntu"
+    }
+  }
+
+  provisioner "file" {
+    content     = "${data.template_file.init_client.rendered}"
+    destination = "${var.config_destination_dir}/init.sh"
+
+    connection {
+      type = "ssh"
+      user = "ubuntu"
+    }
+  }
+
   provisioner "remote-exec" {
     inline = [
-      "sudo apt-get update",
-      "sudo apt-get install -y unzip jq",
-      "mkdir -p ${var.data_directory}",
-      "curl ${var.consul_template_binary_uri}/${var.consul_template_binary_filename} --output ${var.config_destination_dir}/consul-template.zip",
-      "curl ${var.consul_binary_uri}/${var.consul_binary_filename} --output ${var.config_destination_dir}/consul.zip",
-      "unzip ${var.config_destination_dir}/consul-template.zip -d ${var.config_destination_dir}",
-      "unzip ${var.config_destination_dir}/consul.zip -d ${var.config_destination_dir}",
-      "chmod 755 ${var.config_destination_dir}/${var.service_type}",
-      "chmod 755 ${var.config_destination_dir}/consul-template",
-      "chmod 755 ${var.config_destination_dir}/consul",
-      "nohup ${var.config_destination_dir}/consul agent -config-file=${var.config_destination_dir}/consul.json > ${var.config_destination_dir}/consul.log 2>&1 &",
-      "nohup ${var.config_destination_dir}/${var.service_type} > ${var.config_destination_dir}/${var.service_type}.log 2>&1 &",
+      "chmod 755 ${var.config_destination_dir}/init.sh",
+      "sudo ${var.config_destination_dir}/init.sh",
       "sleep 1"
     ]
-    
+
     connection {
-      type        = "ssh"
-      user        = "ubuntu"
+      type = "ssh"
+      user = "ubuntu"
     }
   }
 }
 
-data "template_file" "server_config" {
-  template = "${file("${path.module}/templates/consul_server.json.tpl")}"
-  vars = {
+data "template_file" "init_server" {
+  template = "${file("${path.module}/templates/init_server.sh.tpl")}"
+  vars     = {
     advertise_addr   = "${azurerm_public_ip.consul_server.ip_address}"
+    binary_filename  = "${var.consul_binary_filename}"
+    binary_url       = "${var.consul_binary_url}"
     bootstrap_expect = "${var.bootstrap_expect}"
-    client_addr      = "${var.client_addr}"
     datacenter       = "${var.datacenter}"
     data_directory   = "${var.data_directory}"
     log_level        = "${var.log_level}"
-    node_name        = "${var.server_node_name}"
   }
 }
 
-data "template_file" "client_config" {
-  template = "${file("${path.module}/templates/consul_client.json.tpl")}"
+data "template_file" "init_client" {
+  template = "${file("${path.module}/templates/init_client.sh.tpl")}"
   vars     = {
     advertise_addr   = "${azurerm_public_ip.consul_client.ip_address}"
-    bind_addr        = "${var.bind_addr}"
+    binary_filename  = "${var.consul_binary_filename}"
+    binary_url       = "${var.consul_binary_url}"
     datacenter       = "${var.datacenter}"
     data_directory   = "${var.data_directory}"
     log_level        = "${var.log_level}"
-    node_name        = "${var.client_node_name}"
     server_addr_list = "${azurerm_network_interface.consul_server.private_ip_address}"
+    service_name     = "${var.service_type}"
+  }
+}
+
+data "template_file" "consul_template" {
+  template = "${file("${path.module}/templates/${var.service_type}.sh.tpl")}"
+  vars     = {
+    directory = "${var.config_destination_dir}"
   }
 }

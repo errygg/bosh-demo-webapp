@@ -32,7 +32,7 @@ variable "consul_binary_filename" {
   default     = "consul-enterprise_1.4.2%2Bent_linux_amd64.zip"
 }
 
-variable "consul_binary_uri" {
+variable "consul_binary_url" {
   description = "Location of `consul_binary_filename`"
   default     = "https://s3-us-west-2.amazonaws.com/hc-enterprise-binaries/consul/ent/1.4.2"
 }
@@ -42,7 +42,7 @@ variable "consul_template_binary_filename" {
   default     = "consul-template_0.20.0_linux_386.zip"
 }
 
-variable "consul_template_binary_uri" {
+variable "consul_template_binary_url" {
   description = "Location of `consul_template_binary_filename`"
   default     = "https://releases.hashicorp.com/consul-template/0.20.0"
 }
@@ -54,7 +54,7 @@ variable "datacenter" {
 
 variable "data_directory" {
   description = "Directory to store the Consul data"
-  default     = "/home/ubuntu/consul_data"
+  default     = "/var/lib/consul"
 }
 
 variable "location" {

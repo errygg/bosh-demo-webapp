@@ -6,3 +6,4 @@ terraform/terraform-azurerm-consul/terraform.tfstate.backup
 terraform/terraform-azurerm-consul/terraform.tfvars
 **/counter
 **/dashboard
+**/*.go
