@@ -169,6 +169,20 @@ resource "azurerm_network_security_rule" "dns" {
   destination_address_prefix  = "*"
 }
 
+resource "azurerm_network_security_rule" "service" {
+  name                        = "service-nsg-rule"
+  network_security_group_name = "${azurerm_network_security_group.consul.name}"
+  resource_group_name         = "${azurerm_resource_group.consul.name}"
+  priority                    = 190
+  direction                   = "inbound"
+  access                      = "allow"
+  protocol                    = "tcp"
+  source_port_range           = "*"
+  destination_port_range      = "8080"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+}
+
 resource "azurerm_network_interface" "consul_server" {
   name                      = "consul-network-interface"
   location                  = "${var.location}"
@@ -249,21 +263,13 @@ resource "azurerm_virtual_machine" "consul_server" {
     inline = [
       "sudo apt-get update",
       "sudo apt-get install -y unzip",
-      "mkdir -p ${var.data_directory}"
-    ]
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-    }
-  }
-
-  provisioner "remote-exec" {
-    inline = [
+      "mkdir -p ${var.data_directory}",
       "curl ${var.binary_uri}/${var.binary_filename} --output ${var.config_destination_dir}/consul.zip",
       "unzip ${var.config_destination_dir}/consul.zip -d ${var.config_destination_dir}",
       "nohup ${var.config_destination_dir}/consul agent -config-file=${var.config_destination_dir}/consul.json > ${var.config_destination_dir}/consul.log 2>&1 &",
       "sleep 1"
     ]
+    
     connection {
       type        = "ssh"
       user        = "ubuntu"
@@ -313,45 +319,57 @@ resource "azurerm_virtual_machine" "consul_client" {
   provisioner "file" {
     content     = "${data.template_file.client_config.rendered}"
     destination = "${var.config_destination_dir}/consul.json"
+    
     connection {
       type        = "ssh"
       user        = "ubuntu"
     }
   }
 
+  # TODO - update go build to include assets using packr2
   provisioner "local-exec" {
     working_dir = "${path.module}/../../services/${var.service_type}"
-    command     = "env GOOS=linux GOARCH=arm go build"
+    command     = "env GOOS=linux GOARCH=386 go build"
   }
 
   provisioner "file" {
-    source      = "${path.module}/../../services/${var.service_type}/${var.service_type}"
-    destination = "${var.config_destination_dir}/${var.service_type}"
+    source      = "${path.module}/../../services/${var.service_type}/assets/"
+    destination = "${var.config_destination_dir}"
+    
     connection {
       type = "ssh"
       user = "ubuntu"
     }
   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt-get update",
-      "sudo apt-get install -y unzip",
-      "mkdir -p ${var.data_directory}"
-    ]
+  provisioner "file" {
+    source      = "${path.module}/../../services/${var.service_type}/${var.service_type}"
+    destination = "${var.config_destination_dir}/${var.service_type}"
+    
     connection {
-      type        = "ssh"
-      user        = "ubuntu"
+      type = "ssh"
+      user = "ubuntu"
     }
   }
 
+  # export COUNTING_SERVICE_URL=`curl -s http://104.42.219.125:8500/v1/catalog/service/consul-counter?dc=dc1 |jq '.[0] | "http://" + .ServiceAddress + ":" + "\(.ServicePort)"'`
   provisioner "remote-exec" {
     inline = [
-      "curl ${var.binary_uri}/${var.binary_filename} --output ${var.config_destination_dir}/consul.zip",
+      "sudo apt-get update",
+      "sudo apt-get install -y unzip jq",
+      "mkdir -p ${var.data_directory}",
+      "curl ${var.consul_template_binary_uri}/${var.consul_template_binary_filename} --output ${var.config_destination_dir}/consul-template.zip",
+      "curl ${var.consul_binary_uri}/${var.consul_binary_filename} --output ${var.config_destination_dir}/consul.zip",
+      "unzip ${var.config_destination_dir}/consul-template.zip -d ${var.config_destination_dir}",
       "unzip ${var.config_destination_dir}/consul.zip -d ${var.config_destination_dir}",
+      "chmod 755 ${var.config_destination_dir}/${var.service_type}",
+      "chmod 755 ${var.config_destination_dir}/consul-template",
+      "chmod 755 ${var.config_destination_dir}/consul",
       "nohup ${var.config_destination_dir}/consul agent -config-file=${var.config_destination_dir}/consul.json > ${var.config_destination_dir}/consul.log 2>&1 &",
+      "nohup ${var.config_destination_dir}/${var.service_type} > ${var.config_destination_dir}/${var.service_type}.log 2>&1 &",
       "sleep 1"
     ]
+    
     connection {
       type        = "ssh"
       user        = "ubuntu"

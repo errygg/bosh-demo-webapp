@@ -3,14 +3,6 @@ variable "advertise_addr" {
   default     = "0.0.0.0"
 }
 
-variable "binary_filename" {
-
-}
-
-variable "binary_uri" {
-
-}
-
 variable "bind_addr" {
   default = "0.0.0.0"
 }
@@ -25,14 +17,39 @@ variable "client_addr" {
   default     = "127.0.0.1"
 }
 
+variable "client_node_name" {
+  description = "Consul client node name"
+  default     = "consul-client"
+}
+
 variable "config_destination_dir" {
   description = "Destination directory for the Consul server configuration file"
   default     = "/home/ubuntu"
 }
 
+variable "consul_binary_filename" {
+  description = "Zip file name of the consul binary"
+  default     = "consul-enterprise_1.4.2%2Bent_linux_amd64.zip"
+}
+
+variable "consul_binary_uri" {
+  description = "Location of `consul_binary_filename`"
+  default     = "https://s3-us-west-2.amazonaws.com/hc-enterprise-binaries/consul/ent/1.4.2"
+}
+
+variable "consul_template_binary_filename" {
+  description = "Zip file name of the consul-template binary"
+  default     = "consul-template_0.20.0_linux_386.zip"
+}
+
+variable "consul_template_binary_uri" {
+  description = "Location of `consul_template_binary_filename`"
+  default     = "https://releases.hashicorp.com/consul-template/0.20.0"
+}
+
 variable "datacenter" {
   description = "Datacenter that the Consul server is running in"
-  default     = "dc1"
+  default     = "dc2"
 }
 
 variable "data_directory" {
@@ -47,7 +64,7 @@ variable "location" {
 
 variable "log_level" {
   description = "Logging level for the Consul server"
-  default     = "INFO"
+  default     = "DEBUG"
 }
 
 # Required
@@ -58,11 +75,6 @@ variable "namespace" {
 variable "network_space" {
   description = "Virtual network address space"
   default     = "10.0.0.0/16"
-}
-
-variable "client_node_name" {
-  description = "Consul client node name"
-  default     = "consul-client"
 }
 
 variable "public_ip_name" {
@@ -79,9 +91,9 @@ variable "service_type" {
   default = "dashboard"
 }
 
-# Required
 variable "ssh_key_file" {
   description = "SSH key file"
+  default     = "~/.ssh/id_rsa.pub"
 }
 
 variable "subnet_name" {

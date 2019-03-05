@@ -4,3 +4,5 @@ terraform/terraform-azurerm-consul/terraform.tfstate
 terraform/terraform-azurerm-consul/terraform.tfstate.backup
 **/*.swp
 terraform/terraform-azurerm-consul/terraform.tfvars
+**/counter
+**/dashboard
