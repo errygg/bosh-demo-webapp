@@ -9,9 +9,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/GeertJohan/go.rice"
+	rice "github.com/GeertJohan/go.rice"
 	"github.com/gorilla/mux"
-	"github.com/graarh/golang-socketio"
+	gosocketio "github.com/graarh/golang-socketio"
 	"github.com/graarh/golang-socketio/transport"
 )
 
@@ -43,7 +43,7 @@ func getEnvOrDefault(key, fallback string) string {
 	return fallback
 }
 
-// HealthHandler returns a succesful status and a message.
+// HealthHandler returns a successful status and a message.
 // For use by Consul or other processes that need to verify service health.
 func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
