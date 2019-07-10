@@ -1,11 +1,11 @@
 ---
 applications:
 - name: counter
-  instances: 1
+  instances: 6
   disk: 256M
   memory: 128M
   buildpacks:
-    - consul_buildpack
+    - vault_buildpack
     - go_buildpack
   env:
     GOPACKAGENAME: counter

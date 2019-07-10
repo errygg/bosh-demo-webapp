@@ -50,7 +50,8 @@ from PCF and the counter application running _inside_ of PCF.
 
 ```bash
   > ssh ubuntu@<CONSUL_CLIENT_IP_ADDR>
-  > consul-template -consul-addr=
+  > consul-template -consul-addr=http://<internal_ip_azure_server>:8500 -template=./dashboard.sh.tpl:./dashboard.sh
+  > chmod 755 ./dashboard.sh
   > ./dashboard.sh
 ```
 
